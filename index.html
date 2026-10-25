@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0F172A">
+  <meta name="description" content="A precise, accessible reaction timer with an animated Three.js stimulus and private, in-memory session statistics.">
+  <title>Reflex — Reaction Timer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#0F172A;--surface:#1E293B;--text:#F1F5F9;--ready:#10B981;--waiting:#F59E0B;--result:#3B82F6;--error:#EF4444;--muted:#94A3B8;--accent:var(--result)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif;line-height:1.6}button{font:inherit}button:focus-visible,a:focus-visible{outline:3px solid var(--text);outline-offset:5px}button{touch-action:manipulation}button:disabled{opacity:.4;cursor:not-allowed}::selection{background:var(--result);color:var(--text)}
+    .shell{max-width:1180px;margin:auto;padding:28px 40px}header{display:flex;align-items:center;justify-content:space-between;padding-bottom:34px;border-bottom:1px solid #94a3b833}.brand{display:flex;align-items:center;gap:10px;font-family:Outfit,system-ui,sans-serif;font-size:25px;font-weight:600;letter-spacing:-1px}.mark{color:var(--ready);font-size:30px;line-height:1}.eyebrow,.badge,.label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px}.badge{color:var(--muted);letter-spacing:1px;border:1px solid #94a3b844;border-radius:30px;padding:6px 12px}.intro{padding:36px 0 26px}.eyebrow{color:var(--ready);margin:0 0 10px}h1,h2,h3{font-family:Outfit,system-ui,sans-serif;line-height:1.1}h1{font-size:clamp(36px,5vw,56px);letter-spacing:-2px;margin:0 0 12px;font-weight:500}.intro p:last-child{color:var(--muted);margin:0;max-width:670px;font-size:15px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;align-items:start}
+    .game{border:1px solid #94a3b833;border-radius:20px;overflow:hidden;background:linear-gradient(145deg,#1e293b88,#0F172A)}.game-top{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #94a3b822}.state-label{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--text)}.dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}.game-top .label{color:var(--muted);letter-spacing:1px;font-size:10px}
+    .arena{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;width:100%;height:390px;padding:25px 20px 28px;border:0;background:transparent;color:var(--text);cursor:pointer;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}.arena:focus-visible{outline-offset:-6px;border-radius:14px}.scene{position:absolute;inset:0;pointer-events:none}.scene canvas{display:block;width:100%;height:100%}.fallback{position:absolute;width:108px;height:108px;top:62px;left:calc(50% - 54px);border:3px solid var(--accent);border-radius:26px;transform:rotate(28deg);background:color-mix(in srgb,var(--accent) 15%,transparent);box-shadow:0 0 60px color-mix(in srgb,var(--accent) 15%,transparent)}.fallback.ready{border-radius:50%;transform:none;background:var(--ready)}.fallback.waiting{border-radius:12px}.fallback.false{transform:rotate(45deg);border-radius:4px}.fallback[hidden]{display:none}.arena-text{position:relative;z-index:1;pointer-events:none}.arena h2{margin:0 0 7px;font-size:31px;letter-spacing:-.8px;font-weight:500}.arena .hint{margin:0;color:var(--muted);font-size:13px}.big-result{font-family:Inter,system-ui,sans-serif;font-size:53px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-2px;line-height:1.1}.big-result small{font-size:17px;letter-spacing:0;color:var(--muted);font-weight:500}.controls{padding:17px 22px;display:flex;gap:10px;border-top:1px solid #94a3b822;background:#1e293b66}.control{border:1px solid #94a3b844;border-radius:8px;padding:10px 16px;background:transparent;color:var(--text);font-size:12px;font-weight:600;cursor:pointer}.control:hover:enabled{background:#94a3b81a}.control.primary{background:var(--text);border-color:var(--text);color:var(--bg);min-width:132px}.control.primary:hover:enabled{background:#d9e3ed}.reset{margin-left:auto;color:var(--muted)}.keyboard{padding:12px 20px;text-align:center;font-size:11px;color:var(--muted)}kbd{font:inherit;border:1px solid #94a3b844;border-bottom-width:2px;border-radius:4px;padding:1px 5px;color:var(--text)}
+    .panel{background:var(--surface);border:1px solid #94a3b822;border-radius:16px;padding:22px}.panel h2{margin:0;font-size:18px;font-weight:500}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:19px}.live{font-size:10px;color:var(--ready);letter-spacing:1px;text-transform:uppercase}.stats{margin:0}.stat{display:flex;align-items:center;justify-content:space-between;border-top:1px solid #94a3b822;padding:16px 0}.stat:last-child{padding-bottom:0}.stat dt{font-size:12px;color:var(--muted)}.stat dd{margin:0;font-size:23px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}.stat dd small{font-size:11px;color:var(--muted);font-weight:400}.stat.best dd{color:var(--ready)}.history{margin-top:18px}.history h2{font-size:16px}.empty{font-size:12px;color:var(--muted);margin:16px 0 0}.attempts{list-style:none;padding:0;margin:10px 0 0}.attempts li{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #94a3b822;font-size:12px;font-variant-numeric:tabular-nums}.attempts li:last-child{border:0}.attempts .number{color:var(--muted)}.attempts .bar{height:3px;background:var(--result);border-radius:2px;max-width:70px;flex:1}.instructions{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:29px 0}.step{display:flex;gap:12px}.step-num{font-size:11px;color:var(--muted);padding-top:2px}.step h3{font-family:Inter,system-ui,sans-serif;font-size:12px;margin:0 0 6px;font-weight:600}.step p{color:var(--muted);font-size:11px;margin:0;line-height:1.7}footer{border-top:1px solid #94a3b822;padding:18px 0 5px;display:flex;justify-content:space-between;gap:20px;color:var(--muted);font-size:10px}.notice{color:var(--muted);font-size:12px;margin:12px 0 0}.notice:empty{display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+    @media(max-width:800px){.shell{padding:22px}.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:16px}.history{margin:0}.arena{height:360px}.instructions{gap:16px}.badge{font-size:9px;letter-spacing:.5px}}
+    @media(max-width:480px){.shell{padding:18px 16px}.intro{padding-top:28px}header{padding-bottom:21px}.sidebar{grid-template-columns:1fr}.history{display:none}.instructions{grid-template-columns:1fr;gap:17px}.arena{height:350px}.controls{padding:14px 12px;gap:7px}.control{padding:10px 11px}.control.primary{min-width:110px}.game-top{padding:16px}.badge{padding:5px 9px}.brand{font-size:23px}footer{flex-direction:column;gap:4px}.panel{padding:18px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{display:block;padding:12px 0 0}.stat dt{font-size:10px;margin-bottom:9px}.stat dd{font-size:21px}.panel-head{margin-bottom:12px}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header><div class="brand"><span class="mark" aria-hidden="true">✳</span> reflex<span style="color:var(--ready)">.</span></div><span class="badge">A study in milliseconds</span></header>
+    <main>
+      <section class="intro" aria-labelledby="page-title"><p class="eyebrow">Focus. Wait. React.</p><h1 id="page-title">How fast is your instinct?</h1><p>A moment of focus. A flash of green. Test your reaction time and find your rhythm.</p></section>
+      <div class="layout">
+        <section aria-label="Reaction timer">
+          <div class="game" id="game">
+            <div class="game-top"><span class="state-label"><span class="dot" aria-hidden="true"></span><span id="state-label">Ready to begin</span></span><span class="label">Reaction lab / 01</span></div>
+            <button class="arena" id="arena" type="button" aria-label="Start reaction test" aria-describedby="how-to">
+              <span class="scene" id="scene" aria-hidden="true"></span><span class="fallback" id="fallback" aria-hidden="true"></span>
+              <span class="arena-text"><h2 id="headline">Find your focus.</h2><span class="hint" id="hint">Tap here or start a new round below.</span></span>
+            </button>
+            <div class="controls"><button class="control primary" id="start" type="button">Start test <span aria-hidden="true">↗</span></button><button class="control" id="stop" type="button" disabled>Stop</button><button class="control reset" id="reset" type="button">Reset session</button></div>
+          </div>
+          <div class="keyboard">Click, tap, or press <kbd>Space</kbd> to play · <kbd>Esc</kbd> to stop</div>
+          <p class="notice" id="notice" role="status"></p>
+        </section>
+        <aside class="sidebar" aria-label="Session results">
+          <section class="panel"><div class="panel-head"><h2>Your session</h2><span class="live">● Live</span></div><dl class="stats"><div class="stat best"><dt>Personal best</dt><dd><span id="best">—</span> <small>ms</small></dd></div><div class="stat"><dt>Average time</dt><dd><span id="average">—</span> <small>ms</small></dd></div><div class="stat"><dt>Valid attempts</dt><dd id="count">0</dd></div></dl></section>
+          <section class="panel history"><h2>Recent attempts</h2><p class="empty" id="empty">Your last five results will appear here.</p><ol class="attempts" id="attempts" aria-label="Latest valid results, newest first"></ol></section>
+        </aside>
+      </div>
+      <section class="instructions" id="how-to" aria-label="How to play"><div class="step"><span class="step-num">01</span><div><h3>Start a round</h3><p>Get comfortable. Start the test with a click, tap, or Space.</p></div></div><div class="step"><span class="step-num">02</span><div><h3>Wait for green</h3><p>Amber means wait. The signal changes after a random 1–5 seconds.</p></div></div><div class="step"><span class="step-num">03</span><div><h3>React immediately</h3><p>Click, tap, or press Space when you see green and “GO!”. Too early? Try again.</p></div></div></section>
+      <p class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+      <noscript><p>Enable JavaScript to play this reaction timer.</p></noscript>
+    </main>
+    <footer><span>Built for the moment. Measured in milliseconds.</span><span>Session stays in memory · No saved data</span></footer>
+  </div>
+  <script>
+  (() => {
+    'use strict';
+    // One state machine, one frame loop. No storage, timers on the hot input path,
+    // or geometry allocations during a round. Hardware/display latency still applies.
+    const $ = id => document.getElementById(id);
+    const ui = Object.fromEntries(['game','arena','scene','fallback','headline','hint','start','stop','reset','best','average','count','attempts','empty','announcement','notice','state-label'].map(id => [id,$(id)]));
+    const colors = {idle:0x3B82F6,waiting:0xF59E0B,ready:0x10B981,result:0x3B82F6,false:0xEF4444,stopped:0x3B82F6};
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    const events = new AbortController();
+    let state='idle', deadline=0, signalAt=0, readyExpires=0, frame=0, previousFrame=0;
+    let count=0, total=0, best=Infinity, recent=[], lastResult=0, disposed=false;
+    let renderer, scene, camera, group, shapes, ring, observer, graphics=false, graphicsFailed=false;
+    const words = {
+      idle:['Ready to begin','Find your focus.','Tap here or start a new round below.','Start reaction test'],
+      waiting:['Waiting for the signal','Wait for green…','Hold steady. Don’t react yet.','Waiting. React only when GO appears.'],
+      ready:['Signal active','GO!','React now — click, tap, or press Space.','GO! React now'],
+      result:['Round complete','','Tap here or press Space to try again.','Start another reaction test'],
+      false:['False start','A little too soon.','Wait for green and GO! Tap to try again.','False start. Start another test'],
+      stopped:['Round stopped','Take a breath.','No result recorded. Tap when you’re ready.','Start another reaction test']
+    };
+    function announce(message){ui.announcement.textContent=message;}
+    function setState(next, message) {
+      state=next;
+      const [label, title, hint, accessible] = words[next];
+      ui['state-label'].textContent=label;
+      ui.headline.textContent=title;
+      if(next==='result'){
+        const value=document.createElement('span');value.className='big-result';value.textContent=Math.round(lastResult)+' ';
+        const unit=document.createElement('small');unit.textContent='ms';value.append(unit);ui.headline.append(value);
+      }
+      ui.hint.textContent=message || hint;
+      ui.arena.setAttribute('aria-label',accessible);
+      ui.game.style.setProperty('--accent','#'+colors[next].toString(16).padStart(6,'0'));
+      ui.fallback.className='fallback '+next;
+      const active=next==='waiting'||next==='ready';
+      ui.start.disabled=active;ui.stop.disabled=!active;
+      ui.start.textContent=next==='idle'?'Start test ↗':'Try again ↗';
+      updateShape();
+      announce(next==='result'?`Reaction time ${Math.round(lastResult)} milliseconds. ${count} valid attempts.`: title+'. '+(message||hint));
+    }
+    function updateShape(){
+      if(!graphics)return;
+      shapes.forEach((shape,i)=>{shape.visible=i===(state==='waiting'?1:state==='ready'?2:state==='false'?3:0);shape.material.color.setHex(colors[state]);shape.material.emissive.setHex(colors[state]);});
+      ring.material.color.setHex(colors[state]);
+    }
+    function randomDelay(){
+      // Random timing is generated afresh for every attempt.
+      if(globalThis.crypto?.getRandomValues){const value=new Uint32Array(1);crypto.getRandomValues(value);return 1000+(value[0]/4294967296)*4000;}
+      return 1000+Math.random()*4000;
+    }
+    function start(){if(disposed||document.hidden||state==='waiting'||state==='ready')return;setState('waiting');deadline=performance.now()+randomDelay();}
+    function stop(message){if(state==='waiting'||state==='ready'){deadline=signalAt=readyExpires=0;setState('stopped',message);}}
+    function react(){
+      const now=performance.now(); // Capture input before DOM work or rendering.
+      if(disposed)return;
+      if(state==='waiting'){deadline=0;setState('false');return;}
+      if(state==='ready'){
+        if(now>=readyExpires){stop('Round timed out. Tap to try again.');return;}
+        lastResult=Math.max(0,now-signalAt);count++;total+=lastResult;best=Math.min(best,lastResult);
+        recent.unshift({number:count,time:lastResult});recent.length=Math.min(5,recent.length);
+        signalAt=readyExpires=0;setState('result');updateStats();return;
+      }
+      start();
+    }
+    function updateStats(){
+      ui.best.textContent=count?Math.round(best):'—';ui.average.textContent=count?Math.round(total/count):'—';ui.count.textContent=count;
+      ui.empty.hidden=count>0;ui.attempts.replaceChildren();
+      recent.forEach(result=>{const row=document.createElement('li');const number=document.createElement('span');number.className='number';number.textContent=String(result.number).padStart(2,'0');const bar=document.createElement('span');bar.className='bar';bar.style.width=Math.min(70,result.time/10)+'px';bar.setAttribute('aria-hidden','true');const value=document.createElement('span');value.textContent=Math.round(result.time)+' ms';row.append(number,bar,value);ui.attempts.append(row);});
+    }
+    function reset(){deadline=signalAt=readyExpires=0;count=total=lastResult=0;best=Infinity;recent=[];updateStats();setState('idle');announce('Session reset. All results cleared.');}
+    ui.start.addEventListener('click',start,{signal:events.signal});ui.stop.addEventListener('click',()=>stop(),{signal:events.signal});ui.reset.addEventListener('click',reset,{signal:events.signal});
+    ui.arena.addEventListener('pointerdown',e=>{if(e.button!==0||!e.isPrimary)return;e.preventDefault();ui.arena.focus({preventScroll:true});react();},{signal:events.signal});
+    // A zero-detail click also supports screen-reader activation and native Enter.
+    ui.arena.addEventListener('click',e=>{if(e.detail===0)react();},{signal:events.signal});
+    document.addEventListener('keydown',e=>{
+      if(e.code==='Escape'){e.preventDefault();stop();return;}
+      if(e.code!=='Space'||e.altKey||e.ctrlKey||e.metaKey||e.target.isContentEditable)return;
+      if(e.target.closest('button')&&e.target!==ui.arena)return;
+      e.preventDefault();if(!e.repeat)react();
+    },{signal:events.signal});
+    // Cancel interrupted trials: background throttling must never inflate a result.
+    document.addEventListener('visibilitychange',()=>{
+      if(document.hidden){stop('Round paused because the page was hidden. Start again when ready.');cancelAnimationFrame(frame);frame=0;}
+      else if(!disposed&&!frame){previousFrame=0;frame=requestAnimationFrame(tick);}
+    },{signal:events.signal});
+    window.addEventListener('blur',()=>stop('Focus left the game. Start another round when ready.'),{signal:events.signal});
+    function draw(time,dt){
+      if(!graphics)return;
+      if(!reducedMotion.matches){group.rotation.y+=dt*.38;group.rotation.x=Math.sin(time*.00045)*.12;group.position.y=.55+Math.sin(time*.0014)*.065;ring.rotation.z+=dt*.12;}
+      else{group.rotation.set(.15,.35,0);group.position.y=.55;ring.rotation.z=0;}
+      renderer.render(scene,camera);
+    }
+    function tick(time){
+      frame=0;if(disposed||document.hidden)return;
+      const dt=previousFrame?Math.min((time-previousFrame)/1000,.05):0;previousFrame=time;
+      if(state==='waiting'&&time>=deadline){
+        setState('ready');
+        try{draw(time,dt);}catch(error){fallbackGraphics(error);}
+        // Timestamp the frame that submits the green stimulus, never the random deadline.
+        signalAt=performance.now();readyExpires=signalAt+15000;
+      }else{
+        if(state==='ready'&&performance.now()>=readyExpires)stop('No response within 15 seconds. Tap to try again.');
+        try{draw(time,dt);}catch(error){fallbackGraphics(error);stop('The display changed. Start another round.');}
+      }
+      frame=requestAnimationFrame(tick);
+    }
+    function releaseGraphics(){
+      graphics=false;observer?.disconnect();observer=null;
+      if(scene){scene.traverse(object=>{object.geometry?.dispose();if(object.material){const materials=Array.isArray(object.material)?object.material:[object.material];materials.forEach(material=>material.dispose());}});scene.clear();}
+      renderer?.dispose();renderer?.domElement.remove();renderer=null;scene=null;shapes=null;group=null;ring=null;
+    }
+    function fallbackGraphics(error){
+      graphicsFailed=true;releaseGraphics();ui.fallback.hidden=false;
+      ui.notice.textContent='3D is unavailable. The timer is fully playable with a 2D signal.';
+      if(error)console.warn('Reflex: using the 2D stimulus.',error);
+    }
+    function initGraphics(){
+      if(disposed||graphicsFailed||!globalThis.THREE)return;
+      // Do not change rendering mode in the middle of a live trial.
+      if(state==='waiting'||state==='ready'){pendingGraphics=true;return;}
+      try{
+        const T=globalThis.THREE;scene=new T.Scene();camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(0,.5,7);
+        renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.setClearColor(0x0F172A,0);ui.scene.append(renderer.domElement);
+        scene.add(new T.AmbientLight(0xffffff,1.5));const key=new T.DirectionalLight(0xffffff,3);key.position.set(3,4,5);scene.add(key);const rim=new T.PointLight(0x3B82F6,14);rim.position.set(-3,1,2);scene.add(rim);
+        group=new T.Group();group.position.y=.55;scene.add(group);
+        const geometries=[new T.IcosahedronGeometry(.82,0),new T.BoxGeometry(1.22,1.22,1.22),new T.SphereGeometry(.81,32,20),new T.OctahedronGeometry(.92,0)];
+        shapes=geometries.map(geometry=>{const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:colors[state],metalness:.35,roughness:.27,emissive:colors[state],emissiveIntensity:.15,flatShading:true}));group.add(mesh);return mesh;});
+        ring=new T.Mesh(new T.TorusGeometry(1.38,.009,6,96),new T.MeshBasicMaterial({color:colors[state],transparent:true,opacity:.45}));ring.position.y=.55;ring.rotation.x=.3;scene.add(ring);
+        const resize=()=>{if(!renderer)return;const {width,height}=ui.scene.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();};
+        observer=new ResizeObserver(resize);observer.observe(ui.scene);resize();graphics=true;ui.fallback.hidden=true;updateShape();ui.notice.textContent='';
+        renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();stop('The 3D display was interrupted. Start again with the 2D signal.');fallbackGraphics();},{once:true,signal:events.signal});
+      }catch(error){fallbackGraphics(error);}
+    }
+    let pendingGraphics=false;
+    // A small deferred task activates late-loaded graphics only between rounds.
+    const graphicsCheck=setInterval(()=>{if(pendingGraphics&&state!=='waiting'&&state!=='ready'){pendingGraphics=false;initGraphics();}},250);
+    const cdn=document.createElement('script');cdn.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';cdn.crossOrigin='anonymous';cdn.async=true;
+    const loadTimeout=setTimeout(()=>{if(!graphics){graphicsFailed=true;ui.notice.textContent='3D could not load. You can still play using the 2D signal.';}},10000);
+    cdn.onload=()=>{clearTimeout(loadTimeout);initGraphics();};cdn.onerror=()=>{clearTimeout(loadTimeout);fallbackGraphics();};document.head.append(cdn);
+    function cleanup(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);clearTimeout(loadTimeout);clearInterval(graphicsCheck);events.abort();releaseGraphics();cdn.onload=cdn.onerror=null;}
+    window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup();else stop('Round interrupted. Start again when ready.');},{signal:events.signal});
+    window.addEventListener('pageshow',()=>{if(!disposed&&!frame&&!document.hidden)frame=requestAnimationFrame(tick);},{signal:events.signal});
+    setState('idle');frame=requestAnimationFrame(tick);
+  })();
+  </script>
+</body>
+</html>
