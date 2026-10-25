@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0F172A">
   <meta name="description" content="A precise, accessible reaction timer with an animated Three.js stimulus and private, in-memory session statistics.">
   <title>Reflex — Reaction Timer</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F172A'/%3E%3Ccircle cx='32' cy='32' r='23' fill='none' stroke='%233B82F6' stroke-width='3'/%3E%3Cpath d='M36 11 19 35h11l-3 18 19-27H34z' fill='%2310B981'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,9 +20,59 @@
     @media(max-width:800px){.shell{padding:22px}.layout{grid-template-columns:1fr}.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:16px}.history{margin:0}.arena{height:360px}.instructions{gap:16px}.badge{font-size:9px;letter-spacing:.5px}}
     @media(max-width:480px){.shell{padding:18px 16px}.intro{padding-top:28px}header{padding-bottom:21px}.sidebar{grid-template-columns:1fr}.history{display:none}.instructions{grid-template-columns:1fr;gap:17px}.arena{height:350px}.controls{padding:14px 12px;gap:7px}.control{padding:10px 11px}.control.primary{min-width:110px}.game-top{padding:16px}.badge{padding:5px 9px}.brand{font-size:23px}footer{flex-direction:column;gap:4px}.panel{padding:18px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{display:block;padding:12px 0 0}.stat dt{font-size:10px;margin-bottom:9px}.stat dd{font-size:21px}.panel-head{margin-bottom:12px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+    /* Separate layout rows guarantee that the scene never crosses the score. */
+    [hidden]{display:none!important}
+    .arena{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:220px auto;justify-content:stretch;justify-items:center;align-items:center;text-align:center;gap:16px;height:auto;min-height:390px;padding:12px 20px 24px}
+    .scene{position:relative;inset:auto;display:block;align-self:stretch;width:100%;min-width:0;overflow:hidden}
+    .scene canvas{position:absolute;inset:0;width:100%;height:100%}
+    .fallback{top:calc(50% - 54px)}
+    .fallback.waiting{border-radius:0;clip-path:polygon(50% 0,85% 15%,100% 50%,85% 85%,50% 100%,15% 85%,0 50%,15% 15%);background:conic-gradient(from 20deg,var(--waiting),#1E293B,var(--waiting),#1E293B,var(--waiting));transform:rotate(22deg)}
+    .arena-text{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:118px;width:100%;gap:9px}
+    .arena .headline{display:block;margin:0;font-family:Outfit,system-ui,sans-serif;line-height:1.1;font-size:31px;letter-spacing:-.8px;font-weight:500}
+    .arena .hint{display:block;max-width:100%;text-wrap:balance}
+    .score-rating{display:inline-flex;align-items:center;gap:7px;font-size:12px;line-height:1.5;color:var(--text)}
+    .score-rating::before{content:'';width:6px;height:6px;background:var(--rating-color,var(--result));border-radius:50%}
+    .score-guide{margin-top:20px;border-top:1px solid #94a3b833;padding-top:13px;font-size:11px}
+    .score-guide summary{color:var(--muted);cursor:pointer;padding:3px 0;list-style-position:inside}
+    .score-guide summary:focus-visible{outline:2px solid var(--text);outline-offset:4px;border-radius:3px}
+    .score-guide dl{margin:12px 0}.score-guide dl div{display:flex;justify-content:space-between;gap:10px;margin:7px 0}
+    .score-guide dt{color:var(--text)}.score-guide dd{color:var(--muted);margin:0;font-variant-numeric:tabular-nums}
+    .score-guide p{color:var(--muted);line-height:1.7;margin:10px 0 0}
+    .keyboard{padding-bottom:24px}
+    .attempts li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px}
+    .attempt-rating{font-size:11px;color:var(--muted);line-height:1.4}
+    .attempt-score{text-align:right;white-space:nowrap}
+    .welcome{width:min(580px,calc(100% - 32px));max-height:calc(100dvh - 32px);margin:auto;padding:28px;background:var(--surface);color:var(--text);border:1px solid #94a3b844;border-radius:20px;box-shadow:0 24px 100px #0008;overflow:auto}
+    .welcome::backdrop{background:#0f172acc;backdrop-filter:blur(6px)}
+    .welcome h2{font-size:32px;font-weight:500;letter-spacing:-1px;margin:5px 0 12px}
+    .welcome .welcome-intro{font-size:13px;color:var(--muted);margin:0 0 20px}
+    .welcome-steps{padding-left:22px;margin:0 0 22px;font-size:13px}
+    .welcome-steps li{padding:4px 0 4px 5px}.welcome-steps strong{font-weight:600}
+    .welcome-steps span{color:var(--muted)}
+    .welcome h3{font-family:Inter,system-ui,sans-serif;font-size:13px;margin:0 0 12px}
+    .welcome-targets{margin:0;border-top:1px solid #94a3b833}
+    .welcome-targets div{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid #94a3b822;font-size:12px}
+    .welcome-targets dd{margin:0;color:var(--muted);font-variant-numeric:tabular-nums}
+    .welcome-note{color:var(--muted);font-size:11px;line-height:1.7;margin:14px 0 20px}
+    .welcome-actions{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .welcome-actions span{color:var(--muted);font-size:11px}
+    @media(max-width:480px){.history{display:block}.welcome{padding:22px}.welcome h2{font-size:28px}.welcome-actions{align-items:flex-start;flex-direction:column}.welcome-actions .control{width:100%}}
+    footer{margin-top:22px}
+    @media(max-width:800px){.arena{grid-template-rows:200px auto;min-height:370px}}
+    @media(max-width:480px){.arena{grid-template-rows:180px auto;min-height:350px;padding:12px 16px 22px}.arena .headline{font-size:28px}.score-guide{margin-top:16px}}
   </style>
 </head>
 <body>
+  <dialog class="welcome" id="welcome" aria-labelledby="welcome-title" aria-describedby="welcome-intro">
+    <p class="eyebrow">Welcome to the reaction lab</p>
+    <h2 id="welcome-title" tabindex="-1" autofocus>A little focus goes a long way.</h2>
+    <p class="welcome-intro" id="welcome-intro">One signal. One reaction. Here’s how to make it count.</p>
+    <ol class="welcome-steps"><li><strong>Start a round.</strong> <span>Click, tap, or press Space.</span></li><li><strong>Wait for green and “GO!”.</strong> <span>The amber shape waits a random 1–5 seconds. Reacting early is a false start.</span></li><li><strong>React immediately.</strong> <span>Click, tap, or press Space again. Press Esc to stop a round.</span></li></ol>
+    <h3>Your targets · lower is faster</h3>
+    <dl class="welcome-targets"><div><dt>Amazing</dt><dd>Under 180 ms</dd></div><div><dt>Very good</dt><dd>180–219 ms</dd></div><div><dt>Good</dt><dd>220–269 ms</dd></div><div><dt>Average</dt><dd>270–349 ms</dd></div><div><dt>Below average</dt><dd>350+ ms</dd></div></dl>
+    <p class="welcome-note">Aim for a consistent average, then work toward the next faster band. Only valid attempts count. These are game-defined ratings; your device and input method affect your score.</p>
+    <div class="welcome-actions"><span>This guide appears once per page load.</span><button type="button" class="control primary" id="welcome-dismiss">Got it, let’s play ↗</button></div>
+  </dialog>
   <div class="shell">
     <header><div class="brand"><span class="mark" aria-hidden="true">✳</span> reflex<span style="color:var(--ready)">.</span></div><span class="badge">A study in milliseconds</span></header>
     <main>
@@ -30,22 +81,23 @@
         <section aria-label="Reaction timer">
           <div class="game" id="game">
             <div class="game-top"><span class="state-label"><span class="dot" aria-hidden="true"></span><span id="state-label">Ready to begin</span></span><span class="label">Reaction lab / 01</span></div>
-            <button class="arena" id="arena" type="button" aria-label="Start reaction test" aria-describedby="how-to">
-              <span class="scene" id="scene" aria-hidden="true"></span><span class="fallback" id="fallback" aria-hidden="true"></span>
-              <span class="arena-text"><h2 id="headline">Find your focus.</h2><span class="hint" id="hint">Tap here or start a new round below.</span></span>
+            <button class="arena" id="arena" type="button" aria-label="Start reaction test" aria-describedby="controls-help">
+              <span class="scene" id="scene" aria-hidden="true"><span class="fallback" id="fallback"></span></span>
+              <span class="arena-text"><span class="headline" id="headline">Find your focus.</span><span class="score-rating" id="score-rating" hidden></span><span class="hint" id="hint">Tap here or start a new round below.</span></span>
             </button>
             <div class="controls"><button class="control primary" id="start" type="button">Start test <span aria-hidden="true">↗</span></button><button class="control" id="stop" type="button" disabled>Stop</button><button class="control reset" id="reset" type="button">Reset session</button></div>
           </div>
-          <div class="keyboard">Click, tap, or press <kbd>Space</kbd> to play · <kbd>Esc</kbd> to stop</div>
           <p class="notice" id="notice" role="status"></p>
         </section>
         <aside class="sidebar" aria-label="Session results">
-          <section class="panel"><div class="panel-head"><h2>Your session</h2><span class="live">● Live</span></div><dl class="stats"><div class="stat best"><dt>Personal best</dt><dd><span id="best">—</span> <small>ms</small></dd></div><div class="stat"><dt>Average time</dt><dd><span id="average">—</span> <small>ms</small></dd></div><div class="stat"><dt>Valid attempts</dt><dd id="count">0</dd></div></dl></section>
+          <section class="panel"><div class="panel-head"><h2>Your session</h2><span class="live">● Live</span></div><dl class="stats"><div class="stat best"><dt>Personal best</dt><dd><span id="best">—</span> <small>ms</small></dd></div><div class="stat"><dt>Average time</dt><dd><span id="average">—</span> <small>ms</small></dd></div><div class="stat"><dt>Valid attempts</dt><dd id="count">0</dd></div></dl>
+            <details class="score-guide"><summary>What does my score mean?</summary><dl><div><dt>Amazing</dt><dd>Under 180 ms</dd></div><div><dt>Very good</dt><dd>180–219 ms</dd></div><div><dt>Good</dt><dd>220–269 ms</dd></div><div><dt>Average</dt><dd>270–349 ms</dd></div><div><dt>Below average</dt><dd>350 ms and above</dd></div></dl><p>Lower is faster. These are this game’s rating bands, not population benchmarks. Your device, display, and input method affect the result.</p></details>
+          </section>
           <section class="panel history"><h2>Recent attempts</h2><p class="empty" id="empty">Your last five results will appear here.</p><ol class="attempts" id="attempts" aria-label="Latest valid results, newest first"></ol></section>
         </aside>
       </div>
-      <section class="instructions" id="how-to" aria-label="How to play"><div class="step"><span class="step-num">01</span><div><h3>Start a round</h3><p>Get comfortable. Start the test with a click, tap, or Space.</p></div></div><div class="step"><span class="step-num">02</span><div><h3>Wait for green</h3><p>Amber means wait. The signal changes after a random 1–5 seconds.</p></div></div><div class="step"><span class="step-num">03</span><div><h3>React immediately</h3><p>Click, tap, or press Space when you see green and “GO!”. Too early? Try again.</p></div></div></section>
       <p class="sr-only" id="announcement" role="status" aria-live="polite" aria-atomic="true"></p>
+      <p class="sr-only" id="controls-help">Click, tap, or press Space to start. Wait for green and GO, then react using the same input. Press Escape to stop.</p>
       <noscript><p>Enable JavaScript to play this reaction timer.</p></noscript>
     </main>
     <footer><span>Built for the moment. Measured in milliseconds.</span><span>Session stays in memory · No saved data</span></footer>
@@ -56,13 +108,13 @@
     // One state machine, one frame loop. No storage, timers on the hot input path,
     // or geometry allocations during a round. Hardware/display latency still applies.
     const $ = id => document.getElementById(id);
-    const ui = Object.fromEntries(['game','arena','scene','fallback','headline','hint','start','stop','reset','best','average','count','attempts','empty','announcement','notice','state-label'].map(id => [id,$(id)]));
+    const ui = Object.fromEntries(['game','arena','scene','fallback','headline','hint','start','stop','reset','best','average','count','attempts','empty','announcement','notice','state-label','score-rating','welcome','welcome-dismiss'].map(id => [id,$(id)]));
     const colors = {idle:0x3B82F6,waiting:0xF59E0B,ready:0x10B981,result:0x3B82F6,false:0xEF4444,stopped:0x3B82F6};
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const events = new AbortController();
     let state='idle', deadline=0, signalAt=0, readyExpires=0, frame=0, previousFrame=0;
     let count=0, total=0, best=Infinity, recent=[], lastResult=0, disposed=false;
-    let renderer, scene, camera, group, shapes, ring, observer, graphics=false, graphicsFailed=false;
+    let THREE=null, renderer, scene, camera, group, shapes, ring, observer, graphics=false, graphicsFailed=false;
     const words = {
       idle:['Ready to begin','Find your focus.','Tap here or start a new round below.','Start reaction test'],
       waiting:['Waiting for the signal','Wait for green…','Hold steady. Don’t react yet.','Waiting. React only when GO appears.'],
@@ -72,14 +124,27 @@
       stopped:['Round stopped','Take a breath.','No result recorded. Tap when you’re ready.','Start another reaction test']
     };
     function announce(message){ui.announcement.textContent=message;}
+    // Rate the displayed (rounded) milliseconds so the badge and guide agree.
+    function scoreRating(milliseconds){
+      const score=Math.round(milliseconds);
+      if(score<180)return {label:'Amazing',range:'under 180 ms',color:'#10B981'};
+      if(score<220)return {label:'Very good',range:'180–219 ms',color:'#10B981'};
+      if(score<270)return {label:'Good',range:'220–269 ms',color:'#3B82F6'};
+      if(score<350)return {label:'Average',range:'270–349 ms',color:'#F59E0B'};
+      return {label:'Below average',range:'350+ ms',color:'#EF4444'};
+    }
     function setState(next, message) {
       state=next;
       const [label, title, hint, accessible] = words[next];
       ui['state-label'].textContent=label;
       ui.headline.textContent=title;
+      ui['score-rating'].hidden=next!=='result';
       if(next==='result'){
         const value=document.createElement('span');value.className='big-result';value.textContent=Math.round(lastResult)+' ';
         const unit=document.createElement('small');unit.textContent='ms';value.append(unit);ui.headline.append(value);
+        const rating=scoreRating(lastResult);
+        ui['score-rating'].textContent=rating.label+' · '+rating.range;
+        ui['score-rating'].style.setProperty('--rating-color',rating.color);
       }
       ui.hint.textContent=message || hint;
       ui.arena.setAttribute('aria-label',accessible);
@@ -89,7 +154,7 @@
       ui.start.disabled=active;ui.stop.disabled=!active;
       ui.start.textContent=next==='idle'?'Start test ↗':'Try again ↗';
       updateShape();
-      announce(next==='result'?`Reaction time ${Math.round(lastResult)} milliseconds. ${count} valid attempts.`: title+'. '+(message||hint));
+      announce(next==='result'?`Reaction time ${Math.round(lastResult)} milliseconds. ${scoreRating(lastResult).label}. ${count} valid attempts.`: title+'. '+(message||hint));
     }
     function updateShape(){
       if(!graphics)return;
@@ -101,11 +166,14 @@
       if(globalThis.crypto?.getRandomValues){const value=new Uint32Array(1);crypto.getRandomValues(value);return 1000+(value[0]/4294967296)*4000;}
       return 1000+Math.random()*4000;
     }
-    function start(){if(disposed||document.hidden||state==='waiting'||state==='ready')return;setState('waiting');deadline=performance.now()+randomDelay();}
+    function start(){
+      if(disposed||document.hidden||ui.welcome.open||state==='waiting'||state==='ready')return;
+      setState('waiting');deadline=performance.now()+randomDelay();
+    }
     function stop(message){if(state==='waiting'||state==='ready'){deadline=signalAt=readyExpires=0;setState('stopped',message);}}
     function react(){
       const now=performance.now(); // Capture input before DOM work or rendering.
-      if(disposed)return;
+      if(disposed||ui.welcome.open)return;
       if(state==='waiting'){deadline=0;setState('false');return;}
       if(state==='ready'){
         if(now>=readyExpires){stop('Round timed out. Tap to try again.');return;}
@@ -118,14 +186,24 @@
     function updateStats(){
       ui.best.textContent=count?Math.round(best):'—';ui.average.textContent=count?Math.round(total/count):'—';ui.count.textContent=count;
       ui.empty.hidden=count>0;ui.attempts.replaceChildren();
-      recent.forEach(result=>{const row=document.createElement('li');const number=document.createElement('span');number.className='number';number.textContent=String(result.number).padStart(2,'0');const bar=document.createElement('span');bar.className='bar';bar.style.width=Math.min(70,result.time/10)+'px';bar.setAttribute('aria-hidden','true');const value=document.createElement('span');value.textContent=Math.round(result.time)+' ms';row.append(number,bar,value);ui.attempts.append(row);});
+      recent.forEach(result=>{
+        const row=document.createElement('li');
+        const number=document.createElement('span');number.className='number';number.textContent=String(result.number).padStart(2,'0');number.setAttribute('aria-label','Attempt '+result.number);
+        const rating=document.createElement('span');rating.className='attempt-rating';rating.textContent=scoreRating(result.time).label;
+        const value=document.createElement('span');value.className='attempt-score';value.textContent=Math.round(result.time)+' ms';
+        row.append(number,rating,value);ui.attempts.append(row);
+      });
     }
     function reset(){deadline=signalAt=readyExpires=0;count=total=lastResult=0;best=Infinity;recent=[];updateStats();setState('idle');announce('Session reset. All results cleared.');}
+    function dismissWelcome(){ui.welcome.close();ui.arena.focus({preventScroll:true});}
+    ui['welcome-dismiss'].addEventListener('click',dismissWelcome,{signal:events.signal});
+    ui.welcome.addEventListener('cancel',e=>{e.preventDefault();dismissWelcome();},{signal:events.signal});
     ui.start.addEventListener('click',start,{signal:events.signal});ui.stop.addEventListener('click',()=>stop(),{signal:events.signal});ui.reset.addEventListener('click',reset,{signal:events.signal});
     ui.arena.addEventListener('pointerdown',e=>{if(e.button!==0||!e.isPrimary)return;e.preventDefault();ui.arena.focus({preventScroll:true});react();},{signal:events.signal});
     // A zero-detail click also supports screen-reader activation and native Enter.
     ui.arena.addEventListener('click',e=>{if(e.detail===0)react();},{signal:events.signal});
     document.addEventListener('keydown',e=>{
+      if(ui.welcome.open)return; // Native dialog owns focus and keys until dismissed.
       if(e.code==='Escape'){e.preventDefault();stop();return;}
       if(e.code!=='Space'||e.altKey||e.ctrlKey||e.metaKey||e.target.isContentEditable)return;
       if(e.target.closest('button')&&e.target!==ui.arena)return;
@@ -168,15 +246,15 @@
       if(error)console.warn('Reflex: using the 2D stimulus.',error);
     }
     function initGraphics(){
-      if(disposed||graphicsFailed||!globalThis.THREE)return;
+      if(disposed||graphicsFailed||!THREE)return;
       // Do not change rendering mode in the middle of a live trial.
       if(state==='waiting'||state==='ready'){pendingGraphics=true;return;}
       try{
-        const T=globalThis.THREE;scene=new T.Scene();camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(0,.5,7);
+        const T=THREE;scene=new T.Scene();camera=new T.PerspectiveCamera(38,1,.1,100);camera.position.set(0,.55,5);
         renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));renderer.setClearColor(0x0F172A,0);ui.scene.append(renderer.domElement);
         scene.add(new T.AmbientLight(0xffffff,1.5));const key=new T.DirectionalLight(0xffffff,3);key.position.set(3,4,5);scene.add(key);const rim=new T.PointLight(0x3B82F6,14);rim.position.set(-3,1,2);scene.add(rim);
         group=new T.Group();group.position.y=.55;scene.add(group);
-        const geometries=[new T.IcosahedronGeometry(.82,0),new T.BoxGeometry(1.22,1.22,1.22),new T.SphereGeometry(.81,32,20),new T.OctahedronGeometry(.92,0)];
+        const geometries=[new T.IcosahedronGeometry(.82,0),new T.DodecahedronGeometry(.88,1),new T.SphereGeometry(.81,32,20),new T.OctahedronGeometry(.92,0)];
         shapes=geometries.map(geometry=>{const mesh=new T.Mesh(geometry,new T.MeshStandardMaterial({color:colors[state],metalness:.35,roughness:.27,emissive:colors[state],emissiveIntensity:.15,flatShading:true}));group.add(mesh);return mesh;});
         ring=new T.Mesh(new T.TorusGeometry(1.38,.009,6,96),new T.MeshBasicMaterial({color:colors[state],transparent:true,opacity:.45}));ring.position.y=.55;ring.rotation.x=.3;scene.add(ring);
         const resize=()=>{if(!renderer)return;const {width,height}=ui.scene.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();};
@@ -187,13 +265,17 @@
     let pendingGraphics=false;
     // A small deferred task activates late-loaded graphics only between rounds.
     const graphicsCheck=setInterval(()=>{if(pendingGraphics&&state!=='waiting'&&state!=='ready'){pendingGraphics=false;initGraphics();}},250);
-    const cdn=document.createElement('script');cdn.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';cdn.crossOrigin='anonymous';cdn.async=true;
-    const loadTimeout=setTimeout(()=>{if(!graphics){graphicsFailed=true;ui.notice.textContent='3D could not load. You can still play using the 2D signal.';}},10000);
-    cdn.onload=()=>{clearTimeout(loadTimeout);initGraphics();};cdn.onerror=()=>{clearTimeout(loadTimeout);fallbackGraphics();};document.head.append(cdn);
-    function cleanup(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);clearTimeout(loadTimeout);clearInterval(graphicsCheck);events.abort();releaseGraphics();cdn.onload=cdn.onerror=null;}
+    // Load the pinned ES module asynchronously: the game and fallback never wait on CDN access.
+    const THREE_MODULE_URL='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+    const loadTimeout=setTimeout(()=>{if(!THREE&&!disposed){fallbackGraphics();}},10000);
+    import(THREE_MODULE_URL).then(module=>{
+      clearTimeout(loadTimeout);if(disposed||graphicsFailed)return;
+      THREE=module;initGraphics();
+    }).catch(error=>{clearTimeout(loadTimeout);if(!disposed)fallbackGraphics(error);});
+    function cleanup(){if(disposed)return;disposed=true;cancelAnimationFrame(frame);clearTimeout(loadTimeout);clearInterval(graphicsCheck);events.abort();releaseGraphics();THREE=null;}
     window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup();else stop('Round interrupted. Start again when ready.');},{signal:events.signal});
     window.addEventListener('pageshow',()=>{if(!disposed&&!frame&&!document.hidden)frame=requestAnimationFrame(tick);},{signal:events.signal});
-    setState('idle');frame=requestAnimationFrame(tick);
+    setState('idle');ui.welcome.showModal();frame=requestAnimationFrame(tick);
   })();
   </script>
 </body>
